@@ -11,11 +11,13 @@ fn main() {
 }
 
 mod processor_utils {
+    use std::fs::read;
+
     use ort::{GraphOptimizationLevel, Session};
 
     const MODEL_PATH: &str = "src/models/mnist_model.onnx";
 
-    pub fn preprocess_image(img_path: &str) -> Vec<(u8, u8, u8)> {
+    pub fn preprocess_image(img_path: &str) -> Vec<u8> {
         return Vec::new();
     }
 
@@ -26,7 +28,7 @@ mod processor_utils {
             .commit_from_file(MODEL_PATH).unwrap();
     }
 
-    pub fn guess(model: &Session, ready_img: &Vec<(u8, u8, u8)>) -> u32 {
+    pub fn guess(model: &Session, ready_img: &Vec<u8>) -> u32 {
         return 0;
     }
 }
@@ -35,10 +37,18 @@ mod processor_utils {
 #[cfg(test)]
 mod test {
     use std::any::{Any, TypeId};
-
     use ort::Session;
-
     use super::*;
+
+    #[test]
+    fn preprocess_image_when_handwritten_digit_5_jpg_then_is_gray_scale_vector(){
+        let img_path = "test_data/handwritten_5.jpg";
+        let ready_img = preprocess_image(img_path);
+
+        for &value in &ready_img {
+            assert!(value >= 0 && value <= 255, "Value {} is out of bounds for grayscale!", value);
+        }
+    }
 
     #[test]
     fn build_model_when_using_mnist_onnx_model_then_return_session(){
