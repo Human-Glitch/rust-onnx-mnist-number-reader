@@ -5,9 +5,9 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let img_path = &args[1];
 
-    let ready_img = preprocess_image(img_path);
+    let gray_img = preprocess_image(img_path);
     let model = build_model();
-    let guess = guess(&model, ready_img);
+    let guess = guess(&model, &gray_img);
 
     print!("Guess: {}", guess);
 }
@@ -36,13 +36,14 @@ mod processor_utils {
             .commit_from_file(MODEL_PATH).unwrap();
     }
 
-    pub fn guess(model: &Session, gray_img: GrayImage) -> f32 {
+    pub fn guess(model: &Session, gray_img: &GrayImage) -> f32 {
+        
+        // Convert image into normalized ndarray
         let raw_pixels: Vec<u8> = gray_img
             .pixels()
             .map(|p| p[0])
             .collect();
-
-        // Convert image into normalized ndarray
+        
         let input = Array4::from_shape_vec(
             (1, 1, gray_img.height() as usize, gray_img.width() as usize),
             raw_pixels
@@ -50,6 +51,7 @@ mod processor_utils {
                 .map(|p| p as f32 / 255.).collect())
             .unwrap();
 
+        // Run model
         let outputs = model
             .run(inputs![input.view()]
                 .expect("Bad input!"))
@@ -63,8 +65,8 @@ mod processor_utils {
             println!("Class Probabilities {}: {:.4}", index, probability);
         }
 
-        let guess = probabilities.iter()
-            .enumerate()
+        // Take index of max value as the answer
+        let guess = probabilities.iter().enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
             .map(|(index, _)| index)
             .unwrap();
@@ -121,9 +123,9 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, ready_img);
+        let guess = guess(&session, &ready_img);
 
-        assert_eq!(res, 5.);
+        assert_eq!(guess, 5.);
     }
 
     #[test]
@@ -132,9 +134,9 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, ready_img);
+        let guess = guess(&session, &ready_img);
 
-        assert_eq!(res, 0.);
+        assert_eq!(guess, 0.);
     }
 
     #[test]
@@ -143,9 +145,9 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, ready_img);
+        let guess = guess(&session, &ready_img);
 
-        assert_eq!(res, 1.);
+        assert_eq!(guess, 1.);
     }
 
     #[test]
@@ -154,9 +156,9 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, ready_img);
+        let guess = guess(&session, &ready_img);
 
-        assert_eq!(res, 2.);
+        assert_eq!(guess, 2.);
     }
 
     #[test]
@@ -165,9 +167,9 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, ready_img);
+        let guess = guess(&session, &ready_img);
 
-        assert_eq!(res, 4.);
+        assert_eq!(guess, 4.);
     }
 
     #[test]
@@ -176,9 +178,9 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, ready_img);
+        let guess = guess(&session, &ready_img);
 
-        assert_eq!(res, 7.);
+        assert_eq!(guess, 7.);
     }
 
     #[test]
@@ -187,19 +189,8 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, ready_img);
+        let res = guess(&session, &ready_img);
 
         assert_eq!(res, 8.);
     }
-
-    // #[test]
-    // fn guess_when_handwritten_digit_3_png_then_label_3(){
-    //     let img_path = "test_data/handwritten_3.png";
-    //     let ready_img = preprocess_image(img_path);
-    //     let session = build_model();
-
-    //     let res = guess(&session, ready_img);
-
-    //     assert_eq!(res, 3.);
-    // }
 }
