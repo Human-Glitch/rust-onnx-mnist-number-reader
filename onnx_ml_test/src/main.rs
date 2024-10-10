@@ -13,17 +13,15 @@ fn main() {
 }
 
 mod processor_utils {
-    use image::{imageops::{resize, FilterType}, open, DynamicImage, GrayImage, ImageReader};
+    use image::{imageops::{resize, FilterType}, open, DynamicImage, GrayImage};
     use ndarray::Array4;
     use ort::{inputs, GraphOptimizationLevel, Session};
 
     const MODEL_PATH: &str = "src/models/mnist_model.onnx";
 
     pub fn preprocess_image(img_path: &str) -> GrayImage {
-        let img: DynamicImage = ImageReader::open(&img_path)
-            .expect("File path did not contain an image.")
-            .decode()
-            .expect("Decode failed");
+        let img: DynamicImage = open(&img_path)
+            .expect("File path did not contain an image.");
 
         let resized_img= resize(&img, 28, 28, FilterType::Nearest);
         let gray_img = DynamicImage::ImageRgba8(resized_img).to_luma8();
