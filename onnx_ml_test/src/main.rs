@@ -132,6 +132,17 @@ mod test {
         assert_eq!(res, 0.);
     }
 
+    #[test]
+    fn guess_when_handwritten_digit_1_jpeg_then_guess_1(){
+        let img_path = "test_data/handwritten_1.jpeg";
+        let ready_img = preprocess_image(img_path);
+        let session = build_model();
+
+        let res = guess(&session, ready_img);
+
+        assert_eq!(res, 1.);
+    }
+
     // #[test]
     // fn guess_when_handwritten_digit_3_png_then_label_3(){
     //     let img_path = "test_data/handwritten_3.png";
