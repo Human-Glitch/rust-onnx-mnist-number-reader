@@ -8,11 +8,13 @@ fn main() {
     let ready_img = preprocess_image(img_path);
     let model = build_model();
     let guess = guess(&model, ready_img);
+
+    print!("Guess: {}", guess);
 }
 
 mod processor_utils {
-    use image::{imageops::{resize, FilterType}, open, DynamicImage, GrayImage, ImageBuffer, ImageReader, Luma};
-    use ndarray::Array;
+    use image::{imageops::{resize, FilterType}, open, DynamicImage, GrayImage, ImageReader};
+    use ndarray::Array4;
     use ort::{inputs, GraphOptimizationLevel, Session};
 
     const MODEL_PATH: &str = "src/models/mnist_model.onnx";
@@ -36,23 +38,26 @@ mod processor_utils {
             .commit_from_file(MODEL_PATH).unwrap();
     }
 
-    pub fn guess(model: &Session, ready_img: ImageBuffer<Luma<u8>, Vec<u8>>) -> f32 {
+    pub fn guess(model: &Session, gray_img: GrayImage) -> f32 {
+        let raw_pixels: Vec<u8> = gray_img
+            .pixels()
+            .map(|p| p[0])
+            .collect();
 
-        // Convert image into ndarray
-        let mut input = Array::zeros((1, 1, 28, 28));
-        for pixel in ready_img.enumerate_pixels() {
-            let x = pixel.0 as usize;
-            let y = pixel.1 as usize;
-            let lum: [u8; 1] = pixel.2.0;
-            input[[0, 0, y, x]] = (lum[0] as f32) / 255.;
-        }
+        // Convert image into normalized ndarray
+        let input = Array4::from_shape_vec(
+            (1, 1, gray_img.height() as usize, gray_img.width() as usize),
+            raw_pixels
+                .into_iter()
+                .map(|p| p as f32 / 255.).collect())
+            .unwrap();
 
         let outputs = model
             .run(inputs![input.view()]
                 .expect("Bad input!"))
                 .expect("Could not run model.");
 
-        let probabilities: &ndarray::ArrayBase<ndarray::ViewRepr<&f32>, ndarray::Dim<ndarray::IxDynImpl>> = &outputs[0]
+        let probabilities = &outputs[0]
             .try_extract_tensor::<f32>()
                 .expect("Could not extract tensor float value.");
 
