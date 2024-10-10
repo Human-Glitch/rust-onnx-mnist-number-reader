@@ -76,7 +76,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn preprocess_image_when_handwritten_digit_5_jpg_then_is_gray_scale_vector(){
+    fn preprocess_image_when_handwritten_digit_5_jpg_then_is_resized_gray_scale_vector(){
         let img_path = "test_data/handwritten_5.jpg";
 
         let ready_img = preprocess_image(img_path);
@@ -90,7 +90,7 @@ mod test {
     }
 
     #[test]
-    fn preprocess_image_when_handwritten_digit_3_png_then_is_gray_scale_vector(){
+    fn preprocess_image_when_handwritten_digit_3_png_then_is_resized_gray_scale_vector(){
         let img_path = "test_data/handwritten_3.png";
 
         let ready_img = preprocess_image(img_path);
@@ -111,7 +111,7 @@ mod test {
     }
 
     #[test]
-    fn guess_when_handwritten_digit_5_jpg_then_label_5(){
+    fn guess_when_handwritten_digit_5_jpg_then_guess_5(){
         let img_path = "test_data/handwritten_5.jpg";
         let ready_img = preprocess_image(img_path);
         let session = build_model();
