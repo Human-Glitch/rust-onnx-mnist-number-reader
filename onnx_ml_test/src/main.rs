@@ -11,20 +11,22 @@ fn main() {
 }
 
 mod processor_utils {
-    use image::{imageops::{resize, FilterType}, open, DynamicImage, ImageBuffer, Luma};
+    use image::{imageops::{resize, FilterType}, open, DynamicImage, GrayImage, ImageBuffer, ImageReader, Luma};
     use ndarray::Array;
     use ort::{inputs, GraphOptimizationLevel, Session};
 
     const MODEL_PATH: &str = "src/models/mnist_model.onnx";
 
-    pub fn preprocess_image(img_path: &str) -> ImageBuffer<Luma<u8>, Vec<u8>> {
-        let img: DynamicImage = open(&img_path)
-        .expect("File path did not contain an image.");
+    pub fn preprocess_image(img_path: &str) -> GrayImage {
+        let img: DynamicImage = ImageReader::open(&img_path)
+            .expect("File path did not contain an image.")
+            .decode()
+            .expect("Decode failed");
 
-        let gray_scale = img.to_luma8();
-        let ready_img = resize(&gray_scale, 28, 28, FilterType::CatmullRom);
+        let resized_img= resize(&img, 28, 28, FilterType::Nearest);
+        let gray_img = DynamicImage::ImageRgba8(resized_img).to_luma8();
     
-        return ready_img;
+        return gray_img;
     }
 
     pub fn build_model() -> Session {
@@ -52,7 +54,7 @@ mod processor_utils {
 
         let probabilities: &ndarray::ArrayBase<ndarray::ViewRepr<&f32>, ndarray::Dim<ndarray::IxDynImpl>> = &outputs[0]
             .try_extract_tensor::<f32>()
-            .expect("Could not extract tensor float value.");
+                .expect("Could not extract tensor float value.");
 
         for (index, &probability) in probabilities.iter().enumerate() {
             println!("Class Probabilities {}: {:.4}", index, probability);
@@ -87,7 +89,7 @@ mod test {
         for &value in ready_img.iter() {
             assert!(value >= 0 && value <= 255, "Value {} is out of bounds for grayscale!", value);
         }
-    }
+    } 
 
     #[test]
     fn preprocess_image_when_handwritten_digit_3_png_then_is_resized_gray_scale_vector(){
