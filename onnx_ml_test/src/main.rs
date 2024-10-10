@@ -7,22 +7,22 @@ fn main() {
 
     let ready_img = preprocess_image(img_path);
     let model = build_model();
-    let res = guess(&model, &ready_img);
+    let guess = guess(&model, ready_img);
 }
 
 mod processor_utils {
-    use image::open;
+    use image::{imageops::{resize, FilterType}, open, DynamicImage, ImageBuffer, Luma};
     use ort::{GraphOptimizationLevel, Session};
 
     const MODEL_PATH: &str = "src/models/mnist_model.onnx";
 
-    pub fn preprocess_image(img_path: &str) -> Vec<u8> {
-        let img = open(&img_path).unwrap();
-        let gray_img = img.to_luma8();
-        //gray_img.save("output_gray.png").unwrap();
+    pub fn preprocess_image(img_path: &str) -> ImageBuffer<Luma<u8>, Vec<u8>> {
+        let img: DynamicImage = open(&img_path)
+        .expect("File path did not contain an image.");
 
-        let ready_img: Vec<u8> = gray_img.into_raw();
-
+        let gray_scale = img.to_luma8();
+        let ready_img = resize(&gray_scale, 28, 28, FilterType::CatmullRom);
+    
         return ready_img;
     }
 
@@ -33,7 +33,7 @@ mod processor_utils {
             .commit_from_file(MODEL_PATH).unwrap();
     }
 
-    pub fn guess(model: &Session, ready_img: &Vec<u8>) -> u32 {
+    pub fn guess(model: &Session, ready_img: ImageBuffer<Luma<u8>, Vec<u8>>) -> u32 {
         return 0;
     }
 }
@@ -48,9 +48,13 @@ mod test {
     #[test]
     fn preprocess_image_when_handwritten_digit_5_jpg_then_is_gray_scale_vector(){
         let img_path = "test_data/handwritten_5.jpg";
+
         let ready_img = preprocess_image(img_path);
 
-        for &value in &ready_img {
+        let (width, height) = ready_img.dimensions();
+        assert_eq!(28, width);
+        assert_eq!(28, height);
+        for &value in ready_img.iter() {
             assert!(value >= 0 && value <= 255, "Value {} is out of bounds for grayscale!", value);
         }
     }
@@ -58,9 +62,13 @@ mod test {
     #[test]
     fn preprocess_image_when_handwritten_digit_3_png_then_is_gray_scale_vector(){
         let img_path = "test_data/handwritten_3.png";
+
         let ready_img = preprocess_image(img_path);
 
-        for &value in &ready_img {
+        let (width, height) = ready_img.dimensions();
+        assert_eq!(28, width);
+        assert_eq!(28, height);
+        for &value in ready_img.iter() {
             assert!(value >= 0 && value <= 255, "Value {} is out of bounds for grayscale!", value);
         }
     }
@@ -78,7 +86,7 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, &ready_img);
+        let res = guess(&session, ready_img);
 
         assert_eq!(res, 5);
     }
@@ -89,7 +97,7 @@ mod test {
         let ready_img = preprocess_image(img_path);
         let session = build_model();
 
-        let res = guess(&session, &ready_img);
+        let res = guess(&session, ready_img);
 
         assert_eq!(res, 3);
     }
