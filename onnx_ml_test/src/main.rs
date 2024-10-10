@@ -3,7 +3,7 @@ use processor_utils::{preprocess_image, build_model, guess};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let img_path = &args[0];
+    let img_path = &args[1];
 
     let ready_img = preprocess_image(img_path);
     let model = build_model();
