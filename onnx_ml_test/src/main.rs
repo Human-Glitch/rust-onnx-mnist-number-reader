@@ -12,7 +12,8 @@ fn main() {
 
 mod processor_utils {
     use image::{imageops::{resize, FilterType}, open, DynamicImage, ImageBuffer, Luma};
-    use ort::{GraphOptimizationLevel, Session};
+    use ndarray::Array;
+    use ort::{inputs, GraphOptimizationLevel, Session};
 
     const MODEL_PATH: &str = "src/models/mnist_model.onnx";
 
@@ -33,8 +34,37 @@ mod processor_utils {
             .commit_from_file(MODEL_PATH).unwrap();
     }
 
-    pub fn guess(model: &Session, ready_img: ImageBuffer<Luma<u8>, Vec<u8>>) -> u32 {
-        return 0;
+    pub fn guess(model: &Session, ready_img: ImageBuffer<Luma<u8>, Vec<u8>>) -> f32 {
+
+        // Convert image into ndarray
+        let mut input = Array::zeros((1, 1, 28, 28));
+        for pixel in ready_img.enumerate_pixels() {
+            let x = pixel.0 as usize;
+            let y = pixel.1 as usize;
+            let lum: [u8; 1] = pixel.2.0;
+            input[[0, 0, y, x]] = (lum[0] as f32) / 255.;
+        }
+
+        let outputs = model
+            .run(inputs![input.view()]
+                .expect("Bad input!"))
+                .expect("Could not run model.");
+
+        let probabilities: &ndarray::ArrayBase<ndarray::ViewRepr<&f32>, ndarray::Dim<ndarray::IxDynImpl>> = &outputs[0]
+            .try_extract_tensor::<f32>()
+            .expect("Could not extract tensor float value.");
+
+        for (index, &probability) in probabilities.iter().enumerate() {
+            println!("Class Probabilities {}: {:.4}", index, probability);
+        }
+
+        let guess = probabilities.iter()
+            .enumerate()
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .map(|(index, _)| index)
+            .unwrap();
+
+        return guess as f32;
     }
 }
 
@@ -88,7 +118,7 @@ mod test {
 
         let res = guess(&session, ready_img);
 
-        assert_eq!(res, 5);
+        assert_eq!(res, 5.);
     }
 
     #[test]
@@ -99,6 +129,6 @@ mod test {
 
         let res = guess(&session, ready_img);
 
-        assert_eq!(res, 3);
+        assert_eq!(res, 3.);
     }
 }
