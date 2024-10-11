@@ -15,8 +15,8 @@ pub fn preprocess_image(img_path: &str) -> GrayImage {
     let img: DynamicImage = open(&img_path)
         .expect("File path did not contain an image.");
 
-let resized_img = resize(&img, 28, 28, FilterType::Nearest);
-    DynamicImage::ImageRgba8(resized_img).to_luma8()
+    let resized_img = resize(&img, 28, 28, FilterType::Nearest);
+        DynamicImage::ImageRgba8(resized_img).to_luma8()
 }
 
 pub fn guess(model: &Session, gray_img: &GrayImage) -> f32 {
