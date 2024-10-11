@@ -11,5 +11,5 @@ fn main() {
     let gray_img = preprocess_image(img_path);
     let guess = guess(&model, &gray_img);
 
-    println!("Guess: {}", guess);
+    println!("Guess: {}", &guess);
 }

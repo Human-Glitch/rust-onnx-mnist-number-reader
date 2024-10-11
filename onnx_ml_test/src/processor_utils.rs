@@ -15,7 +15,7 @@ pub fn preprocess_image(img_path: &str) -> GrayImage {
     let img: DynamicImage = open(&img_path)
         .expect("File path did not contain an image.");
 
-    let resized_img= resize(&img, 28, 28, FilterType::Nearest);
+let resized_img = resize(&img, 28, 28, FilterType::Nearest);
     DynamicImage::ImageRgba8(resized_img).to_luma8()
 }
 
@@ -28,9 +28,9 @@ pub fn guess(model: &Session, gray_img: &GrayImage) -> f32 {
         .collect::<Vec<f32>>();
 
     let input = Array4::from_shape_vec(
-(1, 1, gray_img.height() as usize, gray_img.width() as usize),
-    raw_pixels)
-    .unwrap();
+    (1, 1, gray_img.height() as usize, gray_img.width() as usize),
+        raw_pixels)
+        .unwrap();
 
     // Run model
     let outputs = model
