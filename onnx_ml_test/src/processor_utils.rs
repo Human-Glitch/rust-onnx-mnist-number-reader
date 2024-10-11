@@ -28,7 +28,7 @@ pub fn guess(model: &Session, gray_img: &GrayImage) -> f32 {
         .collect::<Vec<f32>>();
 
     let input = Array4::from_shape_vec(
-    (1, 1, gray_img.height() as usize, gray_img.width() as usize),
+        (1, 1, gray_img.height() as usize, gray_img.width() as usize),
         raw_pixels)
         .unwrap();
 
