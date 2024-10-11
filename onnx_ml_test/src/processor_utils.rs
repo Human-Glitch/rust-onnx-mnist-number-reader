@@ -172,4 +172,15 @@ mod test {
 
         assert_eq!(res, 8.);
     }
+
+    #[test]
+    fn guess_when_handwritten_digit_3_webp_then_guess_3(){
+        let img_path = "test_data/handwritten_3.webp";
+        let ready_img = preprocess_image(img_path);
+        let session = build_model();
+
+        let res = guess(&session, &ready_img);
+
+        assert_eq!(res, 3.);
+    }
 }
